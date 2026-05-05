@@ -52,4 +52,14 @@ public class SimpleFPSController : MonoBehaviour
         velocity.y += gravity * Time.deltaTime;
         controller.Move(velocity * Time.deltaTime);
     }
+
+    void OnTriggerStay(Collider other)
+    {
+        if (other.CompareTag("Door") && Input.GetKeyDown(KeyCode.E))
+        {
+            DoorController door = other.GetComponent<DoorController>();
+            if (door != null)
+                door.ToggleDoor();
+        }
+    }
 }
