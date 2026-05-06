@@ -8,9 +8,16 @@ public class PlayerAttack : MonoBehaviour
 
     void Update()
     {
+        // Атака
         if (Input.GetMouseButtonDown(0))
         {
             Attack();
+        }
+
+        // Взаимодействие с дверью
+        if (Input.GetKeyDown(KeyCode.E))
+        {
+            InteractWithDoor();
         }
     }
 
@@ -25,6 +32,30 @@ public class PlayerAttack : MonoBehaviour
                 if (enemy != null)
                 {
                     enemy.TakeDamage(damage);
+                }
+            }
+        }
+    }
+
+    void InteractWithDoor()
+    {
+        RaycastHit hit;
+        if (Physics.Raycast(playerCamera.transform.position, playerCamera.transform.forward, out hit, attackRange))
+        {
+            DoorController door = hit.transform.GetComponent<DoorController>();
+            if (door != null)
+            {
+                door.ToggleDoor();
+                return;
+            }
+
+            // Проверяем родителя (если попали в модель, а скрипт на петлях)
+            if (hit.transform.parent != null)
+            {
+                door = hit.transform.parent.GetComponent<DoorController>();
+                if (door != null)
+                {
+                    door.ToggleDoor();
                 }
             }
         }
