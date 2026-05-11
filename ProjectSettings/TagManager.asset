@@ -6,6 +6,8 @@ TagManager:
   tags:
   - Enemy
   - Door
+  - PlayerBody
+  - PlayerArmsAndLegs
   layers:
   - Default
   - TransparentFX
@@ -13,9 +15,9 @@ TagManager:
   - 
   - Water
   - UI
-  - 
-  - 
-  - 
+  - PlayerBody
+  - PlayerArmsAndLegs
+  - Player
   - 
   - 
   - 

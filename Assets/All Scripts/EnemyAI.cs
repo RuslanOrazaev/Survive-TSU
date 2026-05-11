@@ -1,64 +1,127 @@
 using UnityEngine;
+using UnityEngine.AI;
+using UnityEngine.InputSystem.XR;
 
+[RequireComponent(typeof(NavMeshAgent))]
 public class EnemyAI : MonoBehaviour
 {
-    public float speed = 2f;
-    public float stopDistance = 1.5f;  // на каком расстоянии останавливается
+    [Header("Movement")]
+    public float stopDistance = 1.5f;
+
+    [Header("Combat")]
     public float damage = 10f;
-    public float attackCooldown = 1f;
+    public float attackCooldown = 3.2f;
+
+    [Header("Stats")]
     public float health = 100f;
 
     private Transform player;
-    private float lastAttackTime = 0f;
+    private NavMeshAgent agent;
+
+    Animator animator;
+
+    private float lastAttackTime;
 
     void Start()
     {
         player = GameObject.FindWithTag("Player").transform;
+
+        agent = GetComponent<NavMeshAgent>();
+
+        agent.stoppingDistance = stopDistance;
+
+        animator = GetComponent<Animator>();
     }
 
     void Update()
     {
-        if (player == null) return;
+        if (player == null)
+            return;
 
-        // Смотрим на игрока
-        Vector3 lookPos = new Vector3(player.position.x, transform.position.y, player.position.z);
-        transform.LookAt(lookPos);
+        // AI PATHFINDING
+        agent.SetDestination(player.position);
 
-        float distance = Vector3.Distance(transform.position, player.position);
+        float distance =
+            Vector3.Distance(transform.position, player.position);
 
-        // Двигаемся, только если далеко
-        if (distance > stopDistance)
+        // Поворот к игроку
+        Vector3 lookPos = player.position - transform.position;
+        lookPos.y = 0;
+
+        if (lookPos != Vector3.zero)
         {
-            Vector3 moveDir = (player.position - transform.position).normalized;
-            moveDir.y = 0; // не летаем
-            transform.position += moveDir * speed * Time.deltaTime;
+            Quaternion rot =
+                Quaternion.LookRotation(lookPos);
+
+            transform.rotation =
+                Quaternion.Slerp(
+                    transform.rotation,
+                    rot,
+                    Time.deltaTime * 8f
+                );
         }
 
-        // Атакуем, если близко
-        if (distance <= stopDistance + 0.5f)
+        // Attack
+        if (distance <= stopDistance + 0.3f)
         {
-            if (Time.time - lastAttackTime >= attackCooldown)
-            {
-                PlayerStats stats = player.GetComponent<PlayerStats>();
-                if (stats != null)
-                {
-                    stats.TakeDamage(damage);
-                    Debug.Log("ВРАГ БЬЁТ! Урон: " + damage);
-                    lastAttackTime = Time.time;
-                }
-            }
+            TryAttack();
+        }
+        UpdateAnimator();
+    }
+    void UpdateAnimator()
+    {
+        if (animator == null)
+            return;
+        Vector3 horizontalVel = new Vector3(transform.position.x, 0, transform.position.z);
+        float speed = horizontalVel.magnitude;
+
+        animator.SetFloat("Speed", speed);
+        animator.SetFloat("VelX", horizontalVel.x);
+        animator.SetFloat("VelY", horizontalVel.z);
+        animator.SetFloat("Speed", horizontalVel.magnitude);
+    }
+
+    void TryAttack()
+    {
+        if (Time.time - lastAttackTime < attackCooldown)
+            return;
+        animator.SetTrigger("Attack");
+        PlayerStats stats =
+            player.GetComponent<PlayerStats>();
+
+        if (stats != null)
+        {
+            stats.TakeDamage(damage);
+
+            Debug.Log("ВРАГ БЬЁТ! Урон: " + damage);
+
+            lastAttackTime = Time.time;
         }
     }
 
     public void TakeDamage(float dmg)
     {
         health -= dmg;
-        Debug.Log("Враг получил урон: " + dmg + ". HP врага: " + health);
+
+        Debug.Log(
+            "Враг получил урон: " +
+            dmg +
+            ". HP врага: " +
+            health
+        );
 
         if (health <= 0)
         {
-            Debug.Log("ВРАГ УБИТ!");
-            Destroy(gameObject);
+            Die();
         }
+    }
+
+    void Die()
+    {
+        Debug.Log("ВРАГ УБИТ!");
+
+        agent.enabled = false;
+
+        Destroy(gameObject);
     }
 }

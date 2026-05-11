@@ -1,28 +1,28 @@
+using UnityEditor.AnimatedValues;
 using UnityEngine;
+using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class PlayerAttack : MonoBehaviour
 {
-    public float attackRange = 2f;
-    public float damage = 25f;
-    public Camera playerCamera;
+    public int weaponType = 0; // 0 - unArmed 1 - pistol 2 - sword
+    private float damage = 15f;
+    private float attackCoolDown = 0.7f;
+    private float lastAttackTime;
+    private float attackRange;
 
-    void Update()
+    [Header("References")]
+    public Camera playerCamera;         
+    private Animator animator;
+    void Awake()
     {
-        // Атака
-        if (Input.GetMouseButtonDown(0))
-        {
-            Attack();
-        }
-
-        // Взаимодействие с дверью
-        if (Input.GetKeyDown(KeyCode.E))
-        {
-            InteractWithDoor();
-        }
+        animator = GetComponent<Animator>();
+        UpdateWeaponStats();
     }
-
-    void Attack()
+    public void Attack()
     {
+        if (Time.time - lastAttackTime < attackCoolDown)
+            return;
         RaycastHit hit;
         if (Physics.Raycast(playerCamera.transform.position, playerCamera.transform.forward, out hit, attackRange))
         {
@@ -35,9 +35,12 @@ public class PlayerAttack : MonoBehaviour
                 }
             }
         }
+        lastAttackTime = Time.time;
+        animator.SetTrigger("Attack");
+
     }
 
-    void InteractWithDoor()
+    public void InteractWithDoor()
     {
         RaycastHit hit;
         if (Physics.Raycast(playerCamera.transform.position, playerCamera.transform.forward, out hit, attackRange))
@@ -58,6 +61,40 @@ public class PlayerAttack : MonoBehaviour
                     door.ToggleDoor();
                 }
             }
+        }
+    }
+    public void SetWeaponType(int type)
+    {
+        bool weaponChanged = !(weaponType == type);
+        animator.SetBool("WeaponChanged", weaponChanged);
+
+        weaponType = type;
+        UpdateWeaponStats();
+        animator.SetInteger("WeaponType", weaponType);
+    }
+    public void UpdateWeaponStats()
+    {
+        //check weapong
+        animator.SetInteger("WeaponType", weaponType);
+        switch (weaponType)
+        {
+            case 0:
+                damage = 15f;
+                attackCoolDown = 1.3f;
+                attackRange = 0.7f;
+                break;
+            case 1:
+                damage = 50f;
+                attackCoolDown = 0.7f;
+                attackRange = 50f;
+                break;
+            case 2:
+                damage = 80f;
+                attackCoolDown = 3.2f;
+                attackRange = 1f;
+                break;
+            default:
+                break;
         }
     }
 }

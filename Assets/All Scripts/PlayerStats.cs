@@ -8,10 +8,13 @@ public class PlayerStats : MonoBehaviour
     public Slider healthSlider;
     private bool isDead = false;
 
+    private Animator animator;
+
     void Start()
     {
         if (healthSlider != null)
             healthSlider.value = health;
+        animator = GetComponent<Animator>();
     }
 
     void Update()
@@ -35,6 +38,8 @@ public class PlayerStats : MonoBehaviour
     void Die()
     {
         isDead = true;
+        animator.SetBool("IsDead", isDead);
+        animator.SetLayerWeight(1, 0f);
         Debug.Log("ГЕРОЙ ПОГИБ!");
 
         // Отключаем управление
@@ -53,7 +58,7 @@ public class PlayerStats : MonoBehaviour
         transform.rotation = Quaternion.Euler(90f, transform.rotation.eulerAngles.y, 0f);
 
         // Перезагружаем сцену через 3 секунды
-        Invoke("RestartScene", 3f);
+        Invoke("RestartScene", 6f);
     }
 
     void RestartScene()
