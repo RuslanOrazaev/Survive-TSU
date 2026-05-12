@@ -43,7 +43,7 @@ public class PlayerStats : MonoBehaviour
         Debug.Log("ГЕРОЙ ПОГИБ!");
 
         // Отключаем управление
-        GetComponent<SimpleFPSController>().enabled = false;
+        GetComponent<SimpleFPSControllers>().enabled = false;
         GetComponent<PlayerAttack>().enabled = false;
 
         // Замораживаем на месте

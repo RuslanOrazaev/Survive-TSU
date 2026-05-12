@@ -1,5 +1,5 @@
 using UnityEngine;
-using UnityEngine.AI;
+using UnityEngine.AI;                       
 
 [RequireComponent(typeof(NavMeshAgent))]
 public class WarriorHumanAI : MonoBehaviour
@@ -9,7 +9,8 @@ public class WarriorHumanAI : MonoBehaviour
 
     [Header("Combat")]
     public float damage = 10f;
-    public float attackCooldown = 3.2f;
+    public float attackCooldown = 2f;
+    public int weaponType = 0;
 
     [Header("Stats")]
     public float health = 100f;
@@ -25,18 +26,20 @@ public class WarriorHumanAI : MonoBehaviour
     void Start()
     {
         player = GameObject.FindWithTag("Player").transform;
-        enemy = GameObject.FindWithTag("Enenemy").transform;
+        enemy = GameObject.FindWithTag("Enemy").transform;
 
         agent = GetComponent<NavMeshAgent>();
 
         agent.stoppingDistance = stopDistance;
 
         animator = GetComponent<Animator>();
+        //начальное оружие - руки
+        animator.SetInteger("WeaponType", weaponType);
     }
 
     void Update()
     {
-        if (player == null)
+        if (enemy == null)
             return;
 
         // AI PATHFINDING
@@ -45,11 +48,6 @@ public class WarriorHumanAI : MonoBehaviour
         float distance =
             Vector3.Distance(transform.position, enemy.position);
 
-        Vector3 horizontalVelocity = new Vector3(transform.position.x, 0, transform.position.z);
-        float speed = horizontalVelocity.magnitude;
-        animator.SetFloat("VelX", horizontalVelocity.x);
-        animator.SetFloat("VelY", horizontalVelocity.z);
-        animator.SetFloat("Speed", speed);
         // Поворот к игроку
         Vector3 lookPos = enemy.position - transform.position;
         lookPos.y = 0;
@@ -66,27 +64,37 @@ public class WarriorHumanAI : MonoBehaviour
                     Time.deltaTime * 8f
                 );
         }
-
+        UpdateAnimator();
         // Attack
         if (distance <= stopDistance + 0.3f)
         {
             TryAttack();
         }
+        if (enemy == null)
+            enemy = GameObject.FindWithTag("Enemy").transform;
     }
-
+    void UpdateAnimator()
+    {
+        Vector3 velocity = agent.velocity;
+        Vector3 horizontalVelocity = new Vector3(velocity.x, 0, velocity.z);
+        float speed = horizontalVelocity.magnitude;
+        animator.SetFloat("VelX", horizontalVelocity.x);
+        animator.SetFloat("VelY", horizontalVelocity.z);
+        animator.SetFloat("Speed", speed);
+    }
     void TryAttack()
     {
         if (Time.time - lastAttackTime < attackCooldown)
             return;
         animator.SetTrigger("Attack");
-        PlayerStats stats =
-            player.GetComponent<PlayerStats>();
+        float stats =
+            enemy.GetComponent<EnemyAI>().health;
 
         if (stats != null)
         {
-            stats.TakeDamage(damage);
+            enemy.GetComponent<EnemyAI>().TakeDamage(damage);
 
-            Debug.Log("ВРАГ БЬЁТ! Урон: " + damage);
+            Debug.Log("СОЮЗНИК АТАКУЕТ! Урон: " + damage);
 
             lastAttackTime = Time.time;
         }
@@ -97,7 +105,7 @@ public class WarriorHumanAI : MonoBehaviour
         health -= dmg;
 
         Debug.Log(
-            "Враг получил урон: " +
+            "Союзник получил урон: " +
             dmg +
             ". HP врага: " +
             health
@@ -111,7 +119,8 @@ public class WarriorHumanAI : MonoBehaviour
 
     void Die()
     {
-        Debug.Log("ВРАГ УБИТ!");
+        Debug.Log("Союзник убит УБИТ!");
+        animator.SetBool("IsDead", true);
 
         agent.enabled = false;
 

@@ -8,6 +8,7 @@ TagManager:
   - Door
   - PlayerBody
   - PlayerArmsAndLegs
+  - Helper
   layers:
   - Default
   - TransparentFX

@@ -20,6 +20,7 @@ public class EnemyAI : MonoBehaviour
 
     Animator animator;
 
+    public int weaponType = 0;
     private float lastAttackTime;
 
     void Start()
@@ -31,6 +32,9 @@ public class EnemyAI : MonoBehaviour
         agent.stoppingDistance = stopDistance;
 
         animator = GetComponent<Animator>();
+
+        //начальное оружие для зомби - укусы
+        animator.SetInteger("WeaponType", weaponType);
     }
 
     void Update()
@@ -72,7 +76,8 @@ public class EnemyAI : MonoBehaviour
     {
         if (animator == null)
             return;
-        Vector3 horizontalVel = new Vector3(transform.position.x, 0, transform.position.z);
+        Vector3 velocity = agent.velocity;
+        Vector3 horizontalVel = new Vector3(velocity.x, 0, velocity.z);
         float speed = horizontalVel.magnitude;
 
         animator.SetFloat("Speed", speed);
